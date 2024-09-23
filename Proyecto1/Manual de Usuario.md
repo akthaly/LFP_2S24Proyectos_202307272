@@ -1,3 +1,21 @@
+# Proyecto de Analizador con Tkinter
+
+Este proyecto es una aplicación gráfica construida con Tkinter que permite abrir, editar y guardar archivos de texto, además de analizar datos mediante un ejecutable externo.
+
+## Requisitos
+
+- Python
+- Tkinter
+- Pillow (PIL)
+
+Este codigo de python es de suma importancia a la hora de usar el programa ya que es la interfaz grafica de nuestro programa, en este podremos cargar el archivo .org que vamos a analizar:
+![Descripción de la imagen](imagenes/imagen.png)
+
+
+
+## Código
+
+```python
 from tkinter import *
 from tkinter import messagebox, filedialog
 import subprocess
@@ -50,7 +68,6 @@ def guardarComo():
         messagebox.showinfo("Guardar como", "Archivo guardado exitosamente")
 
 def enviar_datos():
-    # Obtener el dato ingresado en la entrada
     dato = texto.get(1.0, END)  # Leer todo el texto desde la primera línea
 
     resultado = subprocess.run(
@@ -60,15 +77,12 @@ def enviar_datos():
         text=True  # Asegurarse de que la salida se maneje como texto
     )
 
-    # Procesar la salida para dividirla en partes
     salida = resultado.stdout.strip().split('\n')
 
-    # Actualizar la salida de resultados
     resultados_text.delete(1.0, END)
     for linea in salida:
         resultados_text.insert(END, linea + '\n')
 
-    # Extraer país, población y bandera
     pais = ""
     poblacion = ""
     bandera_ruta = ""
@@ -82,26 +96,21 @@ def enviar_datos():
             label_poblacion.config(text=f"Población: {poblacion} personas")
         elif "Bandera" in linea:
             bandera_ruta = linea.split("Bandera:")[1].strip().strip('"')  # Quitar las comillas
-            # Mostrar la imagen de la bandera
             mostrar_bandera(bandera_ruta)
 
 def mostrar_bandera(ruta):
     try:
-        # Usar Pillow para abrir y redimensionar la imagen de la bandera
         img = Image.open(ruta)
         img = img.resize((170, 110), Image.LANCZOS)  
         bandera_img = ImageTk.PhotoImage(img)
 
-        # Actualizar el label_bandera con la imagen
         label_bandera.config(image=bandera_img)
-        label_bandera.image = bandera_img  # Mantener una referencia a la imagen para evitar que se elimine
+        label_bandera.image = bandera_img  # Mantener una referencia a la imagen
     except Exception as e:
         print(f"Error al cargar la imagen: {e}")
 
-
 def acercaDe():
     messagebox.showinfo("Información", "> Nombre: Bryan Alejandro Anona Paredes\n> Carnet: 202307272\n> Curso: Laboratorio Lenguajes Formales y de Programación\n> Sección: B+\n> Año: 2024\n> Segundo Semestre 2024")
-
 
 # Menú
 barraMenu = Menu(raiz)
@@ -118,7 +127,6 @@ barraMenu.add_cascade(label="Acerca de", command=acercaDe)
 barraMenu.add_cascade(label="Salir", command=raiz.quit)
 
 # Títulos
-
 tituloEntrada = Label(raiz, text="Archivo de entrada:", bg="light slate blue", font=("UD Digi Kyokasho NK-R", 15))
 tituloEntrada.pack()
 tituloEntrada.place(x=55, y=15)

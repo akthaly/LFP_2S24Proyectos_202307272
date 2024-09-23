@@ -1,0 +1,42 @@
+grafica:{
+	nombre:"Corto #1";
+	continente:{
+	nombre: "America del Norte";
+		pais:{
+		nombre:"Canada";
+			poblacion: 35295;
+			saturacion:75%;
+			bandera: "C:\banderas\ca.png";
+		}
+		pais:{
+		nombre:"Mexico";
+			poblacion: 119713;
+			saturacion:35%;
+			bandera: "C:\banderas\mx.png";
+		}
+		pais:{
+		nombre:"Estados unidos";
+			poblacion: 512300;
+			saturacion:73%;
+			bandera: "C:\banderas\us.png";
+		}
+	}
+	continente:{
+	nombre: "America del Sur";
+		pais:{
+			nombre:"Cabo verde";
+			poblacion: 35000;
+			saturacion:99%;
+			bandera: "C:\banderas\cv.png";
+		}
+	}
+	continente:{
+	nombre: "Oceania";
+		pais:{
+			nombre:"Indonesia";
+			poblacion: 55000;
+			saturacion:74%;
+			bandera: "C:\banderas\mc.png";
+		}
+	}
+}
