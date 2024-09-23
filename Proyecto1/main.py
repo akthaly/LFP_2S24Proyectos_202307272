@@ -50,21 +50,31 @@ def guardarComo():
         messagebox.showinfo("Guardar como", "Archivo guardado exitosamente")
 
 def enviar_datos():
-    # Obtener el dato ingresado en la entrada
-    dato = texto.get(1.0, END)  # Leer todo el texto desde la primera línea
+    dato = texto.get(1.0, END)
 
     resultado = subprocess.run(
-        ["./analizador.exe"],  # Ejecutable compilado
-        input=dato,  # Enviar el dato como cadena de texto
-        stdout=subprocess.PIPE,  # Capturar la salida del programa
-        text=True  # Asegurarse de que la salida se maneje como texto
+        ["./analizador.exe"],
+        input=dato,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,  # Capturar errores estándar
+        text=True
     )
 
-    # Procesar la salida para dividirla en partes
+    # Procesar la salida
     salida = resultado.stdout.strip().split('\n')
+    errores = resultado.stderr.strip()  # Leer errores si los hay
 
-    # Actualizar la salida de resultados
+    # Limpiar resultados previos
     resultados_text.delete(1.0, END)
+    label_pais.config(text="País: ")
+    label_poblacion.config(text="Población: ")
+    label_bandera.config(image='')  # Limpiar imagen de bandera
+
+    if errores:
+        messagebox.showerror("Errores léxicos", "Se encontraron errores léxicos:\n" + errores)
+        return  # No mostrar nada más si hay errores
+
+    # Si no hay errores, procesar la salida
     for linea in salida:
         resultados_text.insert(END, linea + '\n')
 
@@ -81,9 +91,9 @@ def enviar_datos():
             poblacion = linea.split("Poblacion:")[1].strip()
             label_poblacion.config(text=f"Población: {poblacion} personas")
         elif "Bandera" in linea:
-            bandera_ruta = linea.split("Bandera:")[1].strip().strip('"')  # Quitar las comillas
-            # Mostrar la imagen de la bandera
+            bandera_ruta = linea.split("Bandera:")[1].strip().strip('"')
             mostrar_bandera(bandera_ruta)
+
 
 def mostrar_bandera(ruta):
     try:
