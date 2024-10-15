@@ -30,7 +30,7 @@ def nuevo():
 def abrir():
     archivo_path = filedialog.askopenfilename(
         title="Abrir archivo",
-        filetypes=(("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*"))
+        filetypes=(("Archivos LFP", "*.LFP"), ("Todos los archivos", "*.*"))
     )
     if archivo_path:
         with open(archivo_path, "r") as archivo:
@@ -86,7 +86,8 @@ def tokens():
     frame_tabla.pack(pady=20)
 
     # Crear la tabla (Treeview)
-    tabla = ttk.Treeview(frame_tabla, columns=("Tipo", "Línea", "Columna", "Token", "Descripción"), show="headings")
+    tabla = ttk.Treeview(frame_tabla, columns=("No.", "Tipo", "Línea", "Columna", "Token", "Descripción"), show="headings")
+    tabla.heading("No.", text="No.")
     tabla.heading("Tipo", text="Tipo")
     tabla.heading("Línea", text="Línea")
     tabla.heading("Columna", text="Columna")
@@ -94,6 +95,7 @@ def tokens():
     tabla.heading("Descripción", text="Descripción")
 
     # Ajustar el ancho de las columnas
+    tabla.column("No.", anchor=CENTER, width=75)
     tabla.column("Tipo", anchor=CENTER, width=150)
     tabla.column("Línea", anchor=CENTER, width=75)
     tabla.column("Columna", anchor=CENTER, width=75)
@@ -123,27 +125,47 @@ def tokens():
 
 
 def enviar_datos():
-    dato = texto.get("1.0", END)
+    # Obtener el contenido del área de texto en Tkinter
+    dato = texto.get("1.0", END).strip()  # Eliminar espacios y saltos de línea adicionales al final
+    
+    # Asegurarnos de que el contenido tiene saltos de línea correctos
+    if not dato.endswith("\n"):
+        dato += "\n"  # Asegurar que la última línea tiene un salto de línea
 
-    resultado = subprocess.run(
-        ["./programa.exe"],
-        input=dato,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,  # Para que no muestre mensajes de error
-        text=True
-    )
+    try:
+        # Ejecutar lexer_test.exe y enviarle el contenido del área de texto como entrada estándar
+        resultado = subprocess.run(
+            ["./lexer_test.exe"],  # Ejecutable de Fortran
+            input=dato,            # Enviar el contenido como entrada estándar (stdin)
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        
+        # Mostrar el resultado en el área de texto `resultados_text`
+        resultados_text.delete("1.0", END)  # Limpiar el área de resultados antes de mostrar los nuevos datos
+        resultados_text.insert(END, resultado.stdout)  # Insertar la salida del programa Fortran
 
-    # FALTA AGREGAR COSAS PARA FORTRAN
+    except subprocess.CalledProcessError as e:
+        # Manejar errores en la ejecución del programa Fortran
+        messagebox.showerror("Error en el análisis", f"Ocurrió un error al ejecutar el análisis:\n{e.stderr}")
+
 
 
 def acerca_de():
     messagebox.showinfo("Información", "> Nombre: Bryan Alejandro Anona Paredes\n> Carnet: 202307272\n> Curso: Laboratorio Lenguajes Formales y de Programación\n> Sección: B+\n> Año: 2024\n> Segundo Semestre 2024")
 
+# Función para mostrar las coordenadas del mouse
+def mostrar_coordenadas(event):
+    x, y = event.x, event.y
+    etiqueta.config(text=f"Coordenadas: X:{x}, Y:{y}")
 
 # Menú
 barraMenu = Menu(raiz)
-raiz.config(menu=barraMenu, width=1000, height=575, bg=color_fondo)
+raiz.config(menu=barraMenu, bg=color_fondo)
 raiz.title("Proyecto 2 [LFP]")
+raiz.state("zoomed")
 
 menu = Menu(barraMenu, tearoff=0)
 menu.add_command(label="Nuevo", command=nuevo)
@@ -156,6 +178,12 @@ barraMenu.add_cascade(label="Archivo", menu=menu)
 barraMenu.add_cascade(label="Análisis", command=enviar_datos)
 barraMenu.add_cascade(label="Tokens", command=tokens)
 barraMenu.add_cascade(label="Acerca de", command=acerca_de)
+
+# Coordenadas
+etiqueta = Label(raiz, text="Coordenadas:", font=("UD Digi Kyokasho NK-R", 13, "normal"), fg=color_letra, bg=color_fondo)
+etiqueta.pack()
+etiqueta.place(x=1100, y=15)
+raiz.bind("<Motion>", mostrar_coordenadas)
 
 # Títulos
 
@@ -185,21 +213,12 @@ analisisBoton.pack()
 analisisBoton.place(x=805, y=500, width=140, height=50)
 
 # Labels
-label_pais = Label(raiz, text="Pais: ", font=("UD Digi Kyokasho NK-R", 13, "normal"), fg=color_letra, bg=color_fondo)
-label_pais.pack()
-label_pais.place(x=575, y=375)
-
-label_poblacion = Label(raiz, text="Población: ", font=("UD Digi Kyokasho NK-R", 13), fg=color_letra, bg=color_fondo)
-label_poblacion.pack()
-label_poblacion.place(x=575, y=400)
-
-label_bandera = Label(raiz, text='', bg=color_fondo, font=("UD Digi Kyokasho NK-R", 13))
-label_bandera.pack()
-label_bandera.place(x=575, y=440)
 
 # Área de resultados
 resultados_text = Text(raiz, bg=color_caja_texto, font=("UD Digi Kyokasho NK-R", 11))
 resultados_text.pack()
-resultados_text.place(x=575, y=50, height=300, width=350)
+resultados_text.place(x=575, y=50, height=500, width=750)
+
+
 
 raiz.mainloop()
