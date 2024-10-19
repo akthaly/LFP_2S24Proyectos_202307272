@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox, filedialog, ttk
-import subprocess
+import subprocess, os, webbrowser
+import csv
 from PIL import Image, ImageTk
 
 raiz = Tk()
@@ -13,19 +14,16 @@ color_letra = "gray90"
 # Funciones
 
 def nuevo():
-    # Verifica si hay texto modificado antes de limpiar
-    if texto.get("1.0", END).strip():  # Si hay algo en el área de texto
+    if texto.get("1.0", END).strip():
         respuesta = messagebox.askyesnocancel("Nuevo archivo", "¿Desea guardar los cambios antes de continuar?")
-        if respuesta:  # Si la respuesta es 'Sí', guarda
+        if respuesta:
             guardar_como()
-        elif respuesta is None:  # Si la respuesta es 'Cancelar', no hacer nada
+        elif respuesta is None:
             return
     
-    # Limpiar el área de texto y resetear la variable del archivo actual
     texto.delete("1.0", END)
     global archivo_actual
     archivo_actual = None
-
 
 def abrir():
     archivo_path = filedialog.askopenfilename(
@@ -37,10 +35,8 @@ def abrir():
             contenido = archivo.read()
         texto.delete("1.0", END)
         texto.insert("1.0", contenido)
-
         global archivo_actual
-        archivo_actual = archivo_path  # Guardamos la ruta del archivo actual
-
+        archivo_actual = archivo_path
 
 def guardar():
     global archivo_actual
@@ -49,10 +45,8 @@ def guardar():
             contenido = texto.get("1.0", END)
             archivo.write(contenido)
         messagebox.showinfo("Guardar", "El archivo se ha guardado correctamente")
-
     else:
         guardar_como()
-
 
 def guardar_como():
     archivo_path = filedialog.asksaveasfilename(
@@ -60,103 +54,100 @@ def guardar_como():
         defaultextension=".txt",
         filetypes=(("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*"))
     )
-
     if archivo_path:
         with open(archivo_path, "w") as archivo:
             contenido = texto.get("1.0", END)
             archivo.write(contenido)
-
         global archivo_actual
         archivo_actual = archivo_path
         messagebox.showinfo("Guardar como", "El archivo se ha guardado correctamente")
 
-def tokens():
-    # Crear una nueva ventana
+def abrir_html():
+    """
+    Abre un archivo HTML en el navegador web predeterminado.
+    """
+    # Define la ruta del archivo HTML que quieres abrir
+    ruta_archivo = 'tokens.html'  # Cambia esto a la ruta de tu archivo
+    # Asegúrate de que la ruta del archivo sea absoluta
+    ruta_absoluta = os.path.abspath(ruta_archivo)
+    
+    # Abre el archivo en el navegador
+    webbrowser.open(f'file://{ruta_absoluta}')
+
+def cargar_csv():
+    """Función para cargar los datos del archivo CSV."""
+    with open('tokens.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        next(reader)  # Saltar el encabezado
+        return list(reader)
+
+def llenar_tabla(tree, data):
+    """Función para llenar la tabla con los datos del archivo."""
+    for row in data:
+        tree.insert('', 'end', values=row)
+
+def tabla_errores():
+    # Crear la nueva ventana para mostrar los tokens
     ventana_tokens = Toplevel(raiz)
     ventana_tokens.title("Tokens")
     ventana_tokens.geometry("1000x400")
     ventana_tokens.config(bg="gray20")
 
-    # Etiqueta de título
+    # Título de la ventana
     titulo = Label(ventana_tokens, text="Tokens Analizados", fg="gray90", bg="gray20", font=("UD Digi Kyokasho NK-R", 15))
     titulo.pack(pady=10)
 
-    # Crear un frame para contener la tabla
+    # Frame que contendrá la tabla y el scrollbar
     frame_tabla = Frame(ventana_tokens, bg="gray20")
-    frame_tabla.pack(pady=20)
+    frame_tabla.pack(pady=20, fill=BOTH, expand=True)
 
-    # Crear la tabla (Treeview)
-    tabla = ttk.Treeview(frame_tabla, columns=("No.", "Tipo", "Línea", "Columna", "Token", "Descripción"), show="headings")
-    tabla.heading("No.", text="No.")
-    tabla.heading("Tipo", text="Tipo")
-    tabla.heading("Línea", text="Línea")
-    tabla.heading("Columna", text="Columna")
-    tabla.heading("Token", text="Token")
-    tabla.heading("Descripción", text="Descripción")
+    # Crear tabla de tokens con encabezados
+    tabla = ttk.Treeview(frame_tabla, columns=('Lexema', 'Tipo', 'Linea', 'Columna'), show='headings')
+    for col in ['Lexema', 'Tipo', 'Linea', 'Columna']:
+        tabla.heading(col, text=col)
+        tabla.column(col, anchor='center')  # Centramos las columnas
 
-    # Ajustar el ancho de las columnas
-    tabla.column("No.", anchor=CENTER, width=75)
-    tabla.column("Tipo", anchor=CENTER, width=150)
-    tabla.column("Línea", anchor=CENTER, width=75)
-    tabla.column("Columna", anchor=CENTER, width=75)
-    tabla.column("Token", anchor=CENTER, width=150)
-    tabla.column("Descripción", anchor=CENTER, width=200)
-
-    # Scrollbar para la tabla
+    # Scrollbar vertical para la tabla
     scrollbar = Scrollbar(frame_tabla, orient=VERTICAL, command=tabla.yview)
     tabla.configure(yscroll=scrollbar.set)
     scrollbar.pack(side=RIGHT, fill=Y)
+
+    # Empaquetar la tabla dentro del frame
     tabla.pack(side=LEFT, fill=BOTH, expand=True)
 
-    # Aquí puedes agregar los datos de los tokens (esto es solo un ejemplo)
-    tokens_ejemplo = [("if", "Palabra Reservada", 2),
-                      ("(", "Símbolo", 2),
-                      ("x", "Identificador", 2),
-                      ("==", "Operador", 2),
-                      ("10", "Número", 2),
-                      (")", "Símbolo", 2)]
-
-    for token in tokens_ejemplo:
-        tabla.insert("", "end", values=token)
+    # Cargar datos del CSV (o cualquier fuente) y llenar la tabla
+    data = cargar_csv()  # Aquí se llama a la función que carga los datos
+    llenar_tabla(tabla, data)  # Aquí llenamos la tabla con los datos
 
     # Botón para cerrar la ventana
     boton_cerrar = Button(ventana_tokens, text="Cerrar", command=ventana_tokens.destroy, font=("UD Digi Kyokasho NK-R", 13), bg="gray64", fg="black")
     boton_cerrar.pack(pady=20)
 
-
 def enviar_datos():
-    # Obtener el contenido del área de texto en Tkinter
-    dato = texto.get("1.0", END).strip()  # Eliminar espacios y saltos de línea adicionales al final
+    dato = texto.get("1.0", END).strip()
     
-    # Asegurarnos de que el contenido tiene saltos de línea correctos
     if not dato.endswith("\n"):
-        dato += "\n"  # Asegurar que la última línea tiene un salto de línea
+        dato += "\n"
 
     try:
-        # Ejecutar lexer_test.exe y enviarle el contenido del área de texto como entrada estándar
         resultado = subprocess.run(
-            ["./lexer_test.exe"],  # Ejecutable de Fortran
-            input=dato,            # Enviar el contenido como entrada estándar (stdin)
+            ["./lexer_test.exe"],
+            input=dato,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             check=True
         )
         
-        # Mostrar el resultado en el área de texto `resultados_text`
-        resultados_text.delete("1.0", END)  # Limpiar el área de resultados antes de mostrar los nuevos datos
-        resultados_text.insert(END, resultado.stdout)  # Insertar la salida del programa Fortran
+        resultados_text.delete("1.0", END)
+        resultados_text.insert(END, resultado.stdout)
 
     except subprocess.CalledProcessError as e:
-        # Manejar errores en la ejecución del programa Fortran
         messagebox.showerror("Error en el análisis", f"Ocurrió un error al ejecutar el análisis:\n{e.stderr}")
-
-
 
 def acerca_de():
     messagebox.showinfo("Información", "> Nombre: Bryan Alejandro Anona Paredes\n> Carnet: 202307272\n> Curso: Laboratorio Lenguajes Formales y de Programación\n> Sección: B+\n> Año: 2024\n> Segundo Semestre 2024")
 
-# Función para mostrar las coordenadas del mouse
 def mostrar_coordenadas(event):
     x, y = event.x, event.y
     etiqueta.config(text=f"Coordenadas: X:{x}, Y:{y}")
@@ -176,7 +167,8 @@ menu.add_command(label="Salir", command=raiz.quit)
 
 barraMenu.add_cascade(label="Archivo", menu=menu)
 barraMenu.add_cascade(label="Análisis", command=enviar_datos)
-barraMenu.add_cascade(label="Tokens", command=tokens)
+barraMenu.add_cascade(label="Tokens", command=abrir_html)
+barraMenu.add_cascade(label="Tabla de Errores", command=tabla_errores)
 barraMenu.add_cascade(label="Acerca de", command=acerca_de)
 
 # Coordenadas
@@ -211,8 +203,6 @@ analisisBoton = Button(raiz,
                        borderwidth=0)
 analisisBoton.pack()
 analisisBoton.place(x=805, y=500, width=140, height=50)
-
-# Labels
 
 # Área de resultados
 resultados_text = Text(raiz, bg=color_caja_texto, font=("UD Digi Kyokasho NK-R", 11))
