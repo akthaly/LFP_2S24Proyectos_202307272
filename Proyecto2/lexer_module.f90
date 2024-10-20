@@ -68,7 +68,7 @@ contains
         in_single_comment = .false.  ! Indica si estamos dentro de un comentario de una sola línea
         position = 1                 ! Posición inicial en la línea
 
-    ! Si estamos dentro de un comentario de múltiples líneas, seguir acumulando el contenido
+        ! Si estamos dentro de un comentario de múltiples líneas, seguir acumulando el contenido
         if (in_multi_comment) then
             ! Si encontramos el final del comentario en esta línea
             if (index(line, "*/") > 0) then
@@ -136,6 +136,17 @@ contains
                 call add_error("Error: Comentario mal formado", trim(line), line_number, i)
                 exit
             end if
+
+            ! Manejar los caracteres '!', '<', '>', '-' y cualquier otro como caracteres individuales
+            if (caracter == '<') then
+                call add_token(trim(caracter), "Menor que", line_number, i)
+            else if (caracter == '>') then
+                call add_token(trim(caracter), "Mayor que", line_number, i)
+            else if (caracter == '-') then
+                call add_token(trim(caracter), "Guion", line_number, i)
+            else if (caracter == '!') then
+                call add_token(trim(caracter), "Exclamacion Cerrar", line_number, i)
+            end if
     
 
     
@@ -193,7 +204,7 @@ contains
                         end if
                     end if
         
-                    ! Registrar el delimitador como un token si es necesario
+                    ! Aquí se procesan los delimitadores
                     if (caracter /= ' ') then
                         ! Clasificar el tipo del delimitador o símbolo
                         select case (caracter)
@@ -207,25 +218,12 @@ contains
                                 call add_token(trim(caracter), "Parentesis Cierra", line_number, i)
                             case ('.')
                                 call add_token(trim(caracter), "Punto", line_number, i)
-                            ! Agrega más símbolos si es necesario
-                            case default
-                                call add_token(trim(caracter), "Simbolo Desconocido", line_number, i)
+                            ! Otras operaciones...
                         end select
                     end if
-        
                     ! Reiniciar el lexema para comenzar a capturar uno nuevo
                     current_lexema = ""
                     position = i + 1
-                end if
-
-                if (caracter == '!') then
-                    call add_token(trim(caracter), "Exclamacion Cerrar", line_number, i)
-                else if (caracter == ">") then
-                    call add_token(trim(caracter), "Mayor que", line_number, i)
-                else if (caracter == "<") then
-                    call add_token(trim(caracter), "Menor que", line_number, i)
-                else if (caracter == "-") then
-                    call add_token(trim(caracter), "Guion", line_number, i)
                 end if
             end if
     
@@ -387,7 +385,7 @@ contains
             end do
         
             tabla_html = tabla_html // "</table></body></html>"  ! Cerrar la tabla y el HTML
-            print *, "No se encontraron errores léxicos. Generando tabla HTML..."
+            print *, "No se encontraron errores lexicos. Generando tabla HTML..."
         
             ! Guardar tabla_html en un archivo
             open(unit=11, file='tokens.html', status='replace')
@@ -449,7 +447,7 @@ contains
             print *, "Datos exportados a tokens.csv."
         end if
         if (.not. has_errors) then
-            print *, "No se encontraron errores léxicos. No se exportaron datos."
+            print *, "No se encontraron errores lexicos. No se exportaron datos."
         end if
     end subroutine csv_table_error_tokens
     
@@ -489,7 +487,7 @@ contains
         end if
     end subroutine print_tokens
 
-    subroutine parser()
+     subroutine parser()
         type(Token), pointer :: current_token
         logical :: has_errors
         
@@ -497,14 +495,18 @@ contains
         has_errors = .false.
     
         ! Bucle para recorrer toda la lista
-        do while (associated(current_token))
+        do while (associated(current_token) .and. trim(current_token%type) /= "Reservada_Propiedades")
             ! Verificar si el token actual es una declaración de Contenedor
-            if (trim(current_token%type) == "Reservada_Contenedor" .or. trim(current_token%type) ==  "Reservada_Etiqueta" .or. trim(current_token%type) == "Reservada_Boton" .or. trim(current_token%type) == "Reservada_Clave" .or. trim(current_token%type) == "Reservada_Texto") then
+            if (trim(current_token%type) == "Reservada_Contenedor" .or. &
+                trim(current_token%type) ==  "Reservada_Etiqueta" .or. &
+                trim(current_token%type) == "Reservada_Boton" .or. &
+                trim(current_token%type) == "Reservada_Clave" .or. &
+                trim(current_token%type) == "Reservada_Texto") then
                 current_token => current_token%next
                 if (associated(current_token) .and. trim(current_token%type) == "Identificador") then
                     current_token => current_token%next
                     if (associated(current_token) .and. trim(current_token%type) == 'Punto y Coma') then
-                        print *, "Sintaxis correcta"
+                        print *, "Sintaxis correcta: del bloque de Controles"
                     else
                         print *, "Error de sintaxis: Se esperaba un punto y coma"
                         has_errors = .true.
@@ -532,8 +534,133 @@ contains
             ! Continuar con el siguiente token
             if (associated(current_token)) current_token => current_token%next
         end do
+
+        ! Bucle para recorrer toda la lista
+        do while (associated(current_token) .and. trim(current_token%type) /= "Reservada_Colocacion")
+            ! Verificar si el token actual es una declaración de Contenedor
+            if (associated(current_token) .and. trim(current_token%type) == "Identificador") then
+                current_token => current_token%next
+                if (associated(current_token) .and. trim(current_token%type) == "Punto") then
+                    current_token => current_token%next
+                    if (associated(current_token) .and. trim(current_token%type) == 'Reservada_setAncho' .or. trim(current_token%type) == 'Reservada_setAlto') then
+                        current_token => current_token%next
+                        if(associated(current_token) .and. trim(current_token%type) == "Parentesis Abre") then
+                            current_token => current_token%next
+                            if(associated(current_token) .and. trim(current_token%type) == "Numero") then
+                                current_token => current_token%next
+                                if(associated(current_token) .and. trim(current_token%type) == "Parentesis Cierra") then
+                                    current_token => current_token%next
+                                    if (associated(current_token) .and. trim(current_token%type) == 'Punto y Coma') then
+                                        print *, "Sintaxis correcta: setAncho o setAlto"
+                                    else
+                                        print *, "Error de sintaxis: Se esperaba un punto y coma"
+                                        has_errors = .true.
+                                    end if
+                                else
+                                    print *, "Error de sintaxis: Se esperaba un cierre de parentesis"
+                                    has_errors = .true.
+                                end if
+                            else
+                                print *, "Error de sintaxis: Se esperaba un numero"
+                            end if
+                        else
+                            print *, "Error de sintaxis: Se esperaba una apertura de parentesis"
+                        end if
+                    else if (associated(current_token) .and. trim(current_token%type) == 'Reservada_setColorFondo' .or. trim(current_token%type) == 'Reservada_setColorLetra')then
+                        current_token => current_token%next
+                        if(associated(current_token) .and. trim(current_token%type) == "Parentesis Abre") then
+                            current_token => current_token%next
+                            if(associated(current_token) .and. trim(current_token%type) == "Numero") then
+                                current_token => current_token%next
+                                if(associated(current_token) .and. trim(current_token%type) == "Coma") then
+                                    current_token => current_token%next
+                                    if(associated(current_token) .and. trim(current_token%type) == "Numero") then
+                                        current_token => current_token%next
+                                        if(associated(current_token) .and. trim(current_token%type) == "Coma") then
+                                            current_token => current_token%next
+                                            if(associated(current_token) .and. trim(current_token%type) == "Numero") then
+                                                current_token => current_token%next
+                                                if(associated(current_token) .and. trim(current_token%type) == "Parentesis Cierra") then
+                                                    current_token => current_token%next
+                                                    if (associated(current_token) .and. trim(current_token%type) == 'Punto y Coma') then
+                                                        print *, "Sintaxis correcta: setColorFondo o setColorLetra"
+                                                    else
+                                                        print *, "Error de sintaxis: Se esperaba un punto y coma"
+                                                        has_errors = .true.
+                                                    end if
+                                                else
+                                                    print *, "Error de sintaxis: Se esperaba un cierre de parentesis"
+                                                    has_errors = .true.
+                                                end if
+                                            else
+                                                print *, "Error de sintaxis: Se esperaba un numero"
+                                            end if
+                                        else
+                                            print *, "Error de sintaxis: Se esperaba una coma"
+                                        end if
+                                    else
+                                        print *, "Error de sintaxis: Se esperaba un numero"
+                                    end if
+                                else
+                                    print *, "Error de sintaxis: Se esperaba un coma"
+                                end if
+                            else
+                                print *, "Error de sintaxis: Se esperaba un numero"
+                            end if
+                        else
+                            print *, "Error de sintaxis: Se esperaba una apertura de parentesis"
+                        end if
+                    else if (associated(current_token) .and. trim(current_token%type) == 'Reservada_setTexto') then
+                        current_token => current_token%next
+                        if(associated(current_token) .and. trim(current_token%type) == "Parentesis Abre") then
+                            current_token => current_token%next
+                            if(associated(current_token) .and. trim(current_token%type) == "CadenaTexto") then
+                                current_token => current_token%next
+                                if(associated(current_token) .and. trim(current_token%type) == "Parentesis Cierra") then
+                                    current_token => current_token%next
+                                    if (associated(current_token) .and. trim(current_token%type) == 'Punto y Coma') then
+                                        print *, "Sintaxis correcta: setTexto"
+                                    else
+                                        print *, "Error de sintaxis: Se esperaba un punto y coma"
+                                        has_errors = .true.
+                                    end if
+                                else
+                                    print *, "Error de sintaxis: Se esperaba un cierre de parentesis"
+                                    has_errors = .true.
+                                end if
+                            else
+                                print *, "Error de sintaxis: Se esperaba una cadena"
+                            end if
+                        else
+                            print *, "Error de sintaxis: Se esperaba una apertura de parentesis"
+                        end if
+                    else
+                        print *, "Error de sintaxis: Se esperaba una palabra reservada"
+                    end if
+                else
+                    print *, "Error de sintaxis: Se esperaba un punto"
+                    has_errors = .true.
+                end if
+            end if
+    
+            ! Modo pánico si hubo error
+            if (has_errors) then
+                ! Buscar el punto y coma para recuperarse
+                do while (associated(current_token) .and. trim(current_token%type) /= 'Punto y Coma')
+                    current_token => current_token%next
+                end do
+                if (associated(current_token)) then
+                    print *, "Recuperación de error: Se encontró un punto y coma"
+                    has_errors = .false.  ! Resetear el estado de error
+                else
+                    print *, "Recuperación de error: No se encontró un punto y coma"
+                end if
+            end if
+    
+            ! Continuar con el siguiente token
+            if (associated(current_token)) current_token => current_token%next
+        end do
     
     end subroutine parser
-    
 
 end module lexer_module

@@ -1,6 +1,7 @@
 <!--Controles
     Contenedor contlogin;
     Contenedor contFondo;
+    // comentario 
     Boton cmdIngresar;
     Clave pswClave;
     Etiqueta passw;
