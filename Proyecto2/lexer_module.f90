@@ -44,11 +44,6 @@ contains
         end do
         close(unit)
 
-        ! Verificar si al final del archivo seguimos en un comentario multilínea
-        if (in_multi_comment) then
-            call add_error("Error Lexico", "Error: Comentario multilinea sin cierre encontrado al final del archivo.",  line_number, 1)
-            in_multi_comment = .false.  ! Reiniciar estado del comentario
-        end if
     end subroutine read_file
 
     ! Subrutina para procesar cada línea del archivo
@@ -129,33 +124,18 @@ contains
                 in_single_comment = .true.
                 start = i
                 exit  ! Ignorar el resto de la línea, ya que es un comentario de una línea
-    
-            ! Detectar un solo '/' como error si no está seguido de '*' ni '/'
             else if (.not. in_multi_comment .and. caracter == '/' .and. &
-                     (i == len_trim(line) .or. (line(i+1:i+1) /= '*' .and. line(i+1:i+1) /= '/'))) then
+                (i == len_trim(line) .or. (line(i+1:i+1) /= '*' .and. line(i+1:i+1) /= '/'))) then
                 call add_error("Error: Comentario mal formado", trim(line), line_number, i)
                 exit
             end if
+            
 
-            ! Manejar los caracteres '!', '<', '>', '-' y cualquier otro como caracteres individuales
-            if (caracter == '<') then
-                call add_token(trim(caracter), "Menor que", line_number, i)
-            else if (caracter == '>') then
-                call add_token(trim(caracter), "Mayor que", line_number, i)
-            else if (caracter == '-') then
-                call add_token(trim(caracter), "Guion", line_number, i)
-            else if (caracter == '!') then
-                call add_token(trim(caracter), "Exclamacion Cerrar", line_number, i)
-            end if
-    
-
-    
              ! Acumular el lexema actual si es una letra (A-Z, a-z) y no estamos en comentarios
             if (.not. in_single_comment .and. .not. in_multi_comment) then
                 if ((caracter >= 'a' .and. caracter <= 'z') .or. (caracter >= 'A' .and. caracter <= 'Z') .or. (caracter >= '0' .and. caracter <= '9')) then
                     current_lexema = trim(current_lexema) // caracter
                 
-        
                 ! Detectar delimitadores y operadores que indican el fin de un lexema
                 else 
                     if (trim(current_lexema) /= "") then
@@ -204,7 +184,7 @@ contains
                         end if
                     end if
         
-                    ! Aquí se procesan los delimitadores
+                    ! Registrar el delimitador como un token si es necesario
                     if (caracter /= ' ') then
                         ! Clasificar el tipo del delimitador o símbolo
                         select case (caracter)
@@ -218,13 +198,24 @@ contains
                                 call add_token(trim(caracter), "Parentesis Cierra", line_number, i)
                             case ('.')
                                 call add_token(trim(caracter), "Punto", line_number, i)
-                            ! Otras operaciones...
+                            case('!')
+                                call add_token(trim(caracter), "Exclamacion Cerrar", line_number, i)
+                            case('<')
+                                call add_token(trim(caracter), "Menor Que", line_number, i)
+                            case('>')
+                                call add_token(trim(caracter), "Mayor Que", line_number, i)
+                            case('-')
+                                call add_token(trim(caracter), "Guion", line_number, i)
+                            case default
+                                call add_error("Error: Caracter no reconocido", trim(caracter), line_number, i)
                         end select
                     end if
+        
                     ! Reiniciar el lexema para comenzar a capturar uno nuevo
                     current_lexema = ""
                     position = i + 1
                 end if
+                
             end if
     
             ! Avanzar al siguiente carácter
@@ -391,10 +382,7 @@ contains
             open(unit=11, file='tokens.html', status='replace')
             write(11, '(A)') tabla_html
             close(11)
-        end if
-        
-    
-        
+        end if  
     
     end subroutine create_html
     
@@ -487,7 +475,7 @@ contains
         end if
     end subroutine print_tokens
 
-     subroutine parser()
+    subroutine parser()
         type(Token), pointer :: current_token
         logical :: has_errors
         
@@ -535,6 +523,7 @@ contains
             if (associated(current_token)) current_token => current_token%next
         end do
 
+        
         ! Bucle para recorrer toda la lista
         do while (associated(current_token) .and. trim(current_token%type) /= "Reservada_Colocacion")
             ! Verificar si el token actual es una declaración de Contenedor
@@ -660,6 +649,7 @@ contains
             ! Continuar con el siguiente token
             if (associated(current_token)) current_token => current_token%next
         end do
+
     
     end subroutine parser
 

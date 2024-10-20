@@ -1,0 +1,106 @@
+<!--Controles 
+    Contenedor contlogin; 
+    Contenedor contFondo; 
+    Boton cmdIngresar; 
+    Clave pswClave; 
+    Etiqueta passw; 
+    Etiqueta ; // Error sintactico: Se esperaba el token IDENTIFICADOR, pero se encontro PUNTOYCOMA.
+    Texto JTextField0; 
+    Contenedor contlogo2; 
+    Contenedor ContLogo1; 
+    Contenedor ContBody; 
+Controles ¡--> // Error lexico: '¡' no pertenece al lenguaje
+
+<!--Propiedades 
+    /* 
+    Definicion de propiedades 
+    */ 
+
+    //#$inicio de contlogin 
+    contlogin.setAncho(290); 
+    contlogin.setAlto(150); 
+    contlogin.setColorFondo(47,,79); // Error sintactico: Se esperaba el token NUMERO, pero se encontro COMA.
+    //#$fin de contlogin 
+
+    //#$inicio de contFondo 
+    contFondo.setAncho(800); 
+    contFondo.setAlto(100); 
+    contFondo.setColorFondo(64,64,64); 
+    //#$fin de contFondo 
+    
+    //#$inicio de cmdIngresar 
+    cmdIngresar.setTexto("Ingresar"); 
+    cmdIngresar.setAlineacion(centro); 
+    //#$fin de cmdIngresar 
+    
+    //#$inicio de pswClave 
+    pswClave.setTexto(""); 
+    //#$fin de pswClave 
+    
+    //#$inicio de etiqueta passw 
+    passw.setColorLetra(128,128,128); 
+    passw.setTexto("Password"); 
+    //#$fin de passw 
+
+    //#$inicio de Nombre 
+    Nombre.setColorLetra(128,128,128); 
+    Nombre.setTexto("Nombre"); 
+    //#$fin de Nombre 
+
+    //#$inicio de JTextField0 
+    JTextField0.setTexto(""): // Error lexico: ':' no pertenece al lenguaje. Error sintactico: Se esperaba el token PUNTOYCOMA
+    //#$fin de JTextField0 
+
+    //#$inicio de contlogo2 
+    contlogo2.setAncho(150); 
+    contlogo2.setAlto( 50); 
+    contlogo2.setColorFondo(0,128,128); 
+    //#$fin de contlogo2 
+
+    //#$inicio de ContLogo1 
+    ContLogo1.setAncho(50); 
+    ContLogo1.setAlto( 50); 
+    ContLogo1.setColorFondo(64,64,64); 
+    //#$fin de ContLogo1 
+
+    //#$inicio de ContBody 
+    ContBody.setAncho(800); 
+    ContBody.setAlto(300); 
+    ContBody.setColorFondo(64,224,208); 
+    //#$fin de ContBody 
+Propiedades -->
+
+<!--Colocacio // Error sintactico: Se esperaba INICIOBLOQUECOLOCACION O RESERVADACOLOCACION, pero se encontro IDENTIFICADOR.
+    /* 
+    Posicionamiento de los controles 
+    */ 
+    contFondo.setPosicion(25,330); 
+    this.add(contFondo); 
+    contlogin.setPosicion(586,110);
+
+    ContBody.add(contlogin); 
+    passw.setPosicion(11,62);
+
+    contlogin.add(passw); 
+    cmdIngresar.setPosicion(40,100); 
+    pswClave.setPosicion(67,55);
+
+    contlogin.add(pswClave); 
+    Nombre.setPosicion(8,21);
+
+    contlogin.add(Nombre); 
+    JTextField0.setPosicion(65,20);
+
+    contlogin.add(cmdIngresar); 
+    contlogin.add(JTextField0); 
+    contlogo2.setPosicion(88,25);
+
+    ContBody.add(contlogo2); 
+    ContLogo1.setPosicion(36,25);
+    
+    ContBody.add(ContLogo1); 
+    ContBody.setPosicion(23,21); 
+    this.add(ContBody); 
+Colocacion -->
+
+

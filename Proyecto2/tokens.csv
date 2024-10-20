@@ -1,2 +1,3 @@
 Lexeme,Type,Line,Column
-    / comentario,Error Lexico: Error: Comentario mal formado,4,5
+#,Error Lexico: Error: Caracter no reconocido,1,14
+$,Error Lexico: Error: Caracter no reconocido,2,16
