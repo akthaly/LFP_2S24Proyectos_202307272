@@ -1,3 +1,2 @@
 Lexeme,Type,Line,Column
-#,Error Lexico: Error: Caracter no reconocido,1,14
-$,Error Lexico: Error: Caracter no reconocido,2,16
+    contFondo."setPosicion(25,330);,Error Lexico: Cadena no cerrada falta una comilla.,71,15

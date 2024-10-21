@@ -746,10 +746,36 @@ contains
                                 print *, "Error de sintaxis: Se esperaba una apertura de parentesis"
                                 has_errors = .true.
                             end if
+                        else if (associated(current_token) .and. trim(current_token%type) == "Reservada_add") then
+                            current_token => current_token%next
+                            if(associated(current_token) .and. trim(current_token%type) == "Parentesis Abre") then
+                                current_token => current_token%next
+                                if(associated(current_token) .and. trim(current_token%type) == "Identificador") then
+                                    current_token => current_token%next
+                                    if(associated(current_token) .and. trim(current_token%type) == "Parentesis Cierra") then
+                                        current_token => current_token%next
+                                        if (associated(current_token) .and. trim(current_token%type) == 'Punto y Coma') then
+                                            print *, "Sintaxis correcta: identificador.add"
+                                        else
+                                            print *, "Error de sintaxis: Se esperaba un punto y coma"
+                                            has_errors = .true.
+                                        end if
+                                    else
+                                        print *, "Error de sintaxis: Se esperaba un cierre de parentesis"
+                                        has_errors = .true.
+                                    end if
+                                else
+                                    print *, "Error de sintaxis: Se esperaba un identificador"
+                                    has_errors = .true.
+                                end if
+                            else
+                                print *, "Error de sintaxis: Se esperaba una apertura de parentesis"
+                                has_errors = .true.
+                            end if
                         else
-                            print *, "Error de sintaxis: Se esperaba una palabra setPosicion"
+                            print *, "Error de sintaxis: Se esperaba una palabra reservada setPosicion o add"
                             has_errors = .true.
-                        end if
+                        end if    
                     else
                         print *, "Error de sintaxis: Se esperaba un punto"
                         has_errors = .true.
